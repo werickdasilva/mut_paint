@@ -31,6 +31,7 @@ impl PanTool {
                 self.last_point = None;
                 state.stop_request_paint();
             }
+            _ => {}
         }
     }
 }

@@ -8,14 +8,9 @@ mod ui;
 
 use crate::{event::AppEvents, geometry::Point, program::Program, ui::create_menu_bar};
 use gtk::{
-    Application, ApplicationWindow, DrawingArea, EventControllerMotion, FileDialog, FileFilter,
-    GestureClick, Orientation,
     gio::{
-        self, ActionEntry,
-        prelude::{ActionMapExtManual, FileExt},
-    },
-    glib::clone,
-    prelude::{BoxExt, DrawingAreaExtManual, GtkWindowExt, WidgetExt},
+        self, prelude::{ActionMapExtManual, FileExt}, ActionEntry
+    }, glib::{self, clone}, prelude::{BoxExt, DrawingAreaExtManual, GtkWindowExt, WidgetExt}, Application, ApplicationWindow, DrawingArea, EventControllerMotion, EventControllerScroll, EventControllerScrollFlags, FileDialog, FileFilter, GestureClick, Orientation
 };
 use std::rc::Rc;
 
@@ -91,6 +86,7 @@ pub fn ui(app: &Application) {
 pub fn set_events_drawing_area(drawing: Rc<DrawingArea>, program: Rc<Program>) {
     let motion = EventControllerMotion::new();
     let gesture = GestureClick::new();
+    let scroll = EventControllerScroll::new(EventControllerScrollFlags::all());
 
     motion.connect_motion(clone!(
         #[strong]
@@ -133,6 +129,22 @@ pub fn set_events_drawing_area(drawing: Rc<DrawingArea>, program: Rc<Program>) {
         }
     ));
 
+    scroll.connect_scroll(clone!(
+        #[strong]
+        program,
+        #[strong]
+        drawing,
+        move |_, _, y| {
+            program.on_event(AppEvents::ScroolEvent{delta_y: y});
+            if program.state.borrow().needs_paint() {
+                drawing.queue_draw();
+                program.state.borrow_mut().stop_request_paint();
+            }
+            return glib::Propagation::Proceed
+        }
+    ));
+
     drawing.add_controller(motion);
     drawing.add_controller(gesture);
+    drawing.add_controller(scroll);
 }

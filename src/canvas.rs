@@ -6,6 +6,7 @@ use gtk::{
 pub struct Canvas {
     image: Option<ImageSurface>,
     pub position: Point,
+    pub zoom: f64
 }
 
 impl Canvas {
@@ -13,6 +14,7 @@ impl Canvas {
         Canvas {
             image: None,
             position: Point::ZERO,
+            zoom: 1.0,
         }
     }
 
@@ -24,6 +26,7 @@ impl Canvas {
         if let Some(image) = self.image.as_ref() {
             ctx.save().unwrap();
             ctx.translate(self.position.x, self.position.y);
+            ctx.scale(self.zoom, self.zoom);
             ctx.set_source_surface(image, 0., 0.).unwrap();
             ctx.paint().unwrap();
             ctx.restore().unwrap();

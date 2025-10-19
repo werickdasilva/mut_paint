@@ -1,4 +1,4 @@
-use crate::{canvas::Canvas, event::AppEvents, program::ProgramState, tools::PanTool};
+use crate::{canvas::Canvas, event::AppEvents, program::ProgramState, tools::{PanTool, ZoomTool}};
 use gtk::{
     cairo::{Context, Format, ImageSurface},
     gdk::prelude::GdkCairoContextExt,
@@ -8,6 +8,7 @@ use gtk::{
 pub struct App {
     canvas: Canvas,
     pan: PanTool,
+    zoom: ZoomTool,
 }
 
 impl App {
@@ -15,6 +16,7 @@ impl App {
         App {
             canvas: Canvas::new(),
             pan: PanTool::new(),
+            zoom: ZoomTool::new()
         }
     }
 
@@ -29,6 +31,7 @@ impl App {
 
     pub fn on_event(&mut self, events: AppEvents, state: &mut ProgramState) {
         self.pan.on_event(events, &mut self.canvas, state);
+        self.zoom.on_event(events, &mut self.canvas, state);
     }
 
     pub fn draw(&self, ctx: &Context) {
