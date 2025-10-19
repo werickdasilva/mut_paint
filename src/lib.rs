@@ -1,10 +1,15 @@
 pub mod app;
+mod canvas;
+mod event;
+mod geometry;
 mod program;
+mod tools;
 mod ui;
 
-use crate::{program::Program, ui::create_menu_bar};
+use crate::{event::AppEvents, geometry::Point, program::Program, ui::create_menu_bar};
 use gtk::{
-    Application, ApplicationWindow, DrawingArea, FileDialog, FileFilter, Orientation,
+    Application, ApplicationWindow, DrawingArea, EventControllerMotion, FileDialog, FileFilter,
+    GestureClick, Orientation,
     gio::{
         self, ActionEntry,
         prelude::{ActionMapExtManual, FileExt},
@@ -19,6 +24,7 @@ pub fn ui(app: &Application) {
 
     let program = Rc::new(Program::new());
     let drawing = Rc::new(DrawingArea::new());
+    set_events_drawing_area(Rc::clone(&drawing), Rc::clone(&program));
 
     drawing.set_draw_func(clone!(
         #[strong]
@@ -32,16 +38,6 @@ pub fn ui(app: &Application) {
 
     let v_area = gtk::Box::new(Orientation::Horizontal, 0);
     v_area.append(drawing.as_ref());
-
-    let window = ApplicationWindow::builder()
-        .application(app)
-        .title("MutPaint")
-        .can_focus(true)
-        .default_width(700)
-        .default_height(500)
-        .child(&v_area)
-        .show_menubar(true)
-        .build();
 
     let open_file = ActionEntry::builder("open-file")
         .activate(clone!(
@@ -78,6 +74,65 @@ pub fn ui(app: &Application) {
             }
         ))
         .build();
+
+    let window = ApplicationWindow::builder()
+        .application(app)
+        .title("MutPaint")
+        .can_focus(true)
+        .default_width(700)
+        .default_height(500)
+        .child(&v_area)
+        .show_menubar(true)
+        .build();
     window.add_action_entries([open_file]);
     window.present();
+}
+
+pub fn set_events_drawing_area(drawing: Rc<DrawingArea>, program: Rc<Program>) {
+    let motion = EventControllerMotion::new();
+    let gesture = GestureClick::new();
+
+    motion.connect_motion(clone!(
+        #[strong]
+        program,
+        #[strong]
+        drawing,
+        move |_, x, y| {
+            program.on_event(AppEvents::MouseMove(Point::new(x, y)));
+            if program.state.borrow().needs_paint() {
+                drawing.queue_draw();
+                program.state.borrow_mut().stop_request_paint();
+            }
+        }
+    ));
+
+    gesture.connect_pressed(clone!(
+        #[strong]
+        program,
+        #[strong]
+        drawing,
+        move |_, _, x, y| {
+            program.on_event(AppEvents::MouseDown(Point::new(x, y)));
+            if program.state.borrow().needs_paint() {
+                drawing.queue_draw();
+                program.state.borrow_mut().stop_request_paint();
+            }
+        }
+    ));
+    gesture.connect_released(clone!(
+        #[strong]
+        program,
+        #[strong]
+        drawing,
+        move |_, _, x, y| {
+            program.on_event(AppEvents::MouseUp(Point::new(x, y)));
+            if program.state.borrow().needs_paint() {
+                drawing.queue_draw();
+                program.state.borrow_mut().stop_request_paint();
+            }
+        }
+    ));
+
+    drawing.add_controller(motion);
+    drawing.add_controller(gesture);
 }

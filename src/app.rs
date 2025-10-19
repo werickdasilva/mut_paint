@@ -1,22 +1,37 @@
-use gtk::{cairo::Context, gdk::prelude::GdkCairoContextExt, gdk_pixbuf::Pixbuf};
+use crate::{canvas::Canvas, event::AppEvents, program::ProgramState, tools::PanTool};
+use gtk::{
+    cairo::{Context, Format, ImageSurface},
+    gdk::prelude::GdkCairoContextExt,
+    gdk_pixbuf::Pixbuf,
+};
 
 pub struct App {
-    image: Option<Pixbuf>,
+    canvas: Canvas,
+    pan: PanTool,
 }
 
 impl App {
     pub fn new() -> Self {
-        App { image: None }
+        App {
+            canvas: Canvas::new(),
+            pan: PanTool::new(),
+        }
     }
 
-    pub fn open(&mut self, image: Pixbuf) {
-        self.image = Some(image)
+    pub fn open(&mut self, pixbuf: Pixbuf) {
+        let image = ImageSurface::create(Format::ARgb32, pixbuf.width(), pixbuf.height()).unwrap();
+        let ctx = Context::new(&image).unwrap();
+        ctx.set_source_pixbuf(&pixbuf, 0., 0.);
+        ctx.paint().unwrap();
+
+        self.canvas.open(image);
+    }
+
+    pub fn on_event(&mut self, events: AppEvents, state: &mut ProgramState) {
+        self.pan.on_event(events, &mut self.canvas, state);
     }
 
     pub fn draw(&self, ctx: &Context) {
-        if let Some(image) = self.image.as_ref() {
-            ctx.set_source_pixbuf(image, 0., 0.);
-            ctx.paint().unwrap()
-        }
+        self.canvas.draw(ctx);
     }
 }
