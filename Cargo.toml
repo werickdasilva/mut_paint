@@ -4,4 +4,5 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+const_format = "0.2.35"
 gtk = { version = "0.10.1", package = "gtk4", features = ["v4_14"] }

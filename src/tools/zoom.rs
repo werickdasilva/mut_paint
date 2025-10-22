@@ -1,5 +1,5 @@
-use crate::canvas::Canvas;
-use crate::event::AppEvents;
+use crate::core::canvas::Canvas;
+use crate::core::event::AppEvents;
 use crate::geometry::Point;
 use crate::program::ProgramState;
 
@@ -16,8 +16,8 @@ impl ZoomTool {
             AppEvents::MouseMove(point) => self.point = point,
             AppEvents::ScroolEvent { delta_y } => {
                 let zoom_factor = if delta_y < 0.0 { 1.1 } else { 1.0 / 1.1 };
-                let pre_zoom_x = (self.point.x - canvas.position.x) /canvas.zoom;
-                let pre_zoom_y = (self.point.y - canvas.position.y) /canvas.zoom;
+                let pre_zoom_x = (self.point.x - canvas.position.x) / canvas.zoom;
+                let pre_zoom_y = (self.point.y - canvas.position.y) / canvas.zoom;
 
                 let new_zoom = (canvas.zoom * zoom_factor).max(0.1).min(10.0);
                 if new_zoom != canvas.zoom {
@@ -26,7 +26,6 @@ impl ZoomTool {
                     canvas.position.y = self.point.y - (pre_zoom_y * new_zoom);
                     state.request_paint();
                 }
-
             }
             _ => {}
         }

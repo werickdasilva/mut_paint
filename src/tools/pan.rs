@@ -1,5 +1,5 @@
-use crate::canvas::Canvas;
-use crate::event::AppEvents;
+use crate::core::canvas::Canvas;
+use crate::core::event::AppEvents;
 use crate::geometry::Point;
 use crate::program::ProgramState;
 

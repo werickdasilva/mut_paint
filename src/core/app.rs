@@ -1,10 +1,13 @@
-use crate::{canvas::Canvas, event::AppEvents, program::ProgramState, tools::{PanTool, ZoomTool}};
+use crate::{
+    core::{canvas::Canvas, event::AppEvents},
+    program::ProgramState,
+    tools::{PanTool, ZoomTool},
+};
 use gtk::{
     cairo::{Context, Format, ImageSurface},
     gdk::prelude::GdkCairoContextExt,
     gdk_pixbuf::Pixbuf,
 };
-
 pub struct App {
     canvas: Canvas,
     pan: PanTool,
@@ -16,7 +19,7 @@ impl App {
         App {
             canvas: Canvas::new(),
             pan: PanTool::new(),
-            zoom: ZoomTool::new()
+            zoom: ZoomTool::new(),
         }
     }
 

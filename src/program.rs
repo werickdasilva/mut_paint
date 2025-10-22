@@ -1,4 +1,4 @@
-use crate::{app::App, event::AppEvents};
+use crate::core::{app::App, event::AppEvents};
 use gtk::{cairo::Context, gdk_pixbuf::Pixbuf};
 use std::cell::RefCell;
 
