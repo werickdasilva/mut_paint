@@ -75,9 +75,21 @@ impl MainWindow {
             .icon_name("zoom-out")
             .action_name(actions::app::ZOOM_OUT)
             .build();
+        let btn_rotate_left = Button::builder()
+            .icon_name("object-rotate-left-symbolic")
+            .tooltip_markup("Rotate Left")
+            .action_name(actions::app::ROTATE_LEFT)
+            .build();
+        let btn_rotete_right = Button::builder()
+            .icon_name("object-rotate-right-symbolic")
+            .tooltip_markup("Rotate Right")
+            .action_name(actions::app::ROTATE_RIGHT)
+            .build();
         center_widget.append(&btn_zoom_in);
         center_widget.append(label.as_ref());
         center_widget.append(&btn_zoom_out);
+        center_widget.append(&btn_rotate_left);
+        center_widget.append(&btn_rotete_right);
 
         CenterBox::builder()
             .css_classes(["tool-bar"])
@@ -156,6 +168,7 @@ impl MainWindow {
     pub fn connect_events(&self) {
         self.open_image();
         self.register_zoom_action();
+        self.register_rotate_action();
         self.exit();
     }
 
@@ -262,6 +275,17 @@ impl MainWindow {
                 }
             ),
         );
+    }
+
+    fn register_rotate_action(&self) {
+        self.on_register_action(actions::ROTATE_LEFT, &[], |program, drawing| {
+            program.rotate_left();
+            drawing.queue_draw();
+        });
+        self.on_register_action(actions::ROTATE_RIGHT, &[], |program, drawing| {
+            program.rotate_right();
+            drawing.queue_draw();
+        });
     }
 
     pub fn on_register_action<F: Fn(Rc<Program>, Rc<DrawingArea>) + 'static>(
