@@ -37,10 +37,19 @@ impl Program {
     pub fn zoom_in(&self) {
         self.app.borrow_mut().zoom_in();
     }
+    
     pub fn zoom_out(&self) {
         self.app.borrow_mut().zoom_out();
     }
 
+    pub fn rotate_left(&self) {
+        self.app.borrow_mut().rotate_left();
+    }
+    
+    pub fn rotate_right(&self) {
+        self.app.borrow_mut().rotate_right();
+    }
+    
     pub fn zoom_view(&self) -> String {
         let zoom = self.app.borrow().get_zoom();
         format!("{:.1}%", zoom)
