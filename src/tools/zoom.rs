@@ -11,6 +11,29 @@ impl ZoomTool {
     pub fn new() -> Self {
         ZoomTool { point: Point::ZERO }
     }
+
+    pub fn zoom_in(&mut self, canvas: &mut Canvas) {
+        self.apply_zoom(-1.0, canvas); // delta_y negativo => zoom in
+    }
+
+    pub fn zoom_out(&mut self, canvas: &mut Canvas) {
+        self.apply_zoom(1.0, canvas); // delta_y positivo => zoom out
+    }
+
+    fn apply_zoom(&mut self, delta_y: f64, canvas: &mut Canvas) {
+        let zoom_factor = if delta_y < 0.0 { 1.1 } else { 1.0 / 1.1 };
+
+        let pre_zoom_x = (self.point.x - canvas.position.x) / canvas.zoom;
+        let pre_zoom_y = (self.point.y - canvas.position.y) / canvas.zoom;
+
+        let new_zoom = (canvas.zoom * zoom_factor).clamp(0.1, 10.0);
+        if (new_zoom - canvas.zoom).abs() > f64::EPSILON {
+            canvas.zoom = new_zoom;
+            canvas.position.x = self.point.x - (pre_zoom_x * new_zoom);
+            canvas.position.y = self.point.y - (pre_zoom_y * new_zoom);
+        }
+    }
+
     pub fn on_event(&mut self, events: AppEvents, canvas: &mut Canvas, state: &mut ProgramState) {
         match events {
             AppEvents::MouseMove(point) => self.point = point,

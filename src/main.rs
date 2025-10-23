@@ -1,6 +1,5 @@
-use std::rc::Rc;
 use mut_paint::{GtkGui, Program};
-
+use std::rc::Rc;
 
 fn main() {
     let program = Rc::new(Program::new());

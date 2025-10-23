@@ -8,11 +8,11 @@ use crate::{
     program::Program,
 };
 use gtk::{
-    Application,
+    Application, CssProvider, StyleContext, gdk,
     gio::prelude::{ApplicationExt, ApplicationExtManual},
     glib::clone,
 };
-use std::rc::Rc;
+use std::{path::PathBuf, rc::Rc};
 
 const APP_ID: &str = "mut_paint.MutPaint";
 
@@ -24,6 +24,7 @@ impl GtkGui {
     pub fn start(program: Rc<Program>) {
         let application = Application::builder().application_id(APP_ID).build();
         application.connect_startup(|app| {
+            css_loader();
             MenuBar::new(app);
         });
         application.connect_activate(clone!(
@@ -44,4 +45,22 @@ impl GtkGui {
     fn build_ui(&self) {
         self.main_window.start();
     }
+}
+
+
+pub fn css_loader () {
+    let provider = CssProvider::new();
+    let path = PathBuf::from("res/style.css");
+    if path.exists() {
+        provider.load_from_path(&path);
+    } else {
+        eprintln!("Erro laod css");
+        return;
+    }
+
+    gtk::style_context_add_provider_for_display(
+        &gdk::Display::default().expect("Could not connect to a display"),
+        &provider,
+        gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+    );
 }

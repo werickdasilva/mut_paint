@@ -1,5 +1,7 @@
 
 pub const OPEN_IMAGE: &str = "open-image";
+pub const ZOOM_IN: &str = "zoom-in";
+pub const ZOOM_OUT: &str = "zoom-out";
 pub const EXIT: &str = "exit";
 
 pub mod app {
@@ -8,4 +10,6 @@ pub mod app {
     const APP_PREFIX: &str = "app.";
     pub const EXIT: &str = concatcp!(APP_PREFIX, super::EXIT);
     pub const OPEN_IMAGE: &str = concatcp!(APP_PREFIX, super::OPEN_IMAGE);
+    pub const ZOOM_IN: &str = concatcp!(APP_PREFIX, super::ZOOM_IN);
+    pub const ZOOM_OUT: &str = concatcp!(APP_PREFIX, super::ZOOM_OUT);
 }

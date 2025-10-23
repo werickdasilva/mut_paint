@@ -22,6 +22,16 @@ impl App {
             zoom: ZoomTool::new(),
         }
     }
+    pub fn zoom_in(&mut self) {
+        self.zoom.zoom_in(&mut self.canvas);
+    }
+    pub fn zoom_out(&mut self) {
+        self.zoom.zoom_out(&mut self.canvas);
+    }
+
+    pub fn get_zoom(&self) -> f64 {
+        self.canvas.zoom * 100.
+    }
 
     pub fn open(&mut self, pixbuf: Pixbuf) {
         let image = ImageSurface::create(Format::ARgb32, pixbuf.width(), pixbuf.height()).unwrap();

@@ -34,6 +34,18 @@ impl Program {
         }
     }
 
+    pub fn zoom_in(&self) {
+        self.app.borrow_mut().zoom_in();
+    }
+    pub fn zoom_out(&self) {
+        self.app.borrow_mut().zoom_out();
+    }
+
+    pub fn zoom_view(&self) -> String {
+        let zoom = self.app.borrow().get_zoom();
+        format!("{:.1}%", zoom)
+    }
+
     pub fn open_image(&self, path: impl Into<String>) {
         let pixbuf = Pixbuf::from_file(path.into());
         if let Ok(image) = pixbuf {

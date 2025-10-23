@@ -5,14 +5,14 @@ use crate::{
     program::Program,
 };
 use gtk::{
-    Application, ApplicationWindow, DrawingArea, EventControllerMotion, EventControllerScroll,
-    EventControllerScrollFlags, GestureClick,
+    Application, ApplicationWindow, Button, CenterBox, DrawingArea, EventControllerMotion,
+    EventControllerScroll, EventControllerScrollFlags, GestureClick, Label, Orientation,
     gio::{
         SimpleAction,
         prelude::{ActionMapExt, ApplicationExt},
     },
     glib::{self, clone},
-    prelude::{DrawingAreaExtManual, GtkApplicationExt, GtkWindowExt, WidgetExt},
+    prelude::{BoxExt, DrawingAreaExtManual, GtkApplicationExt, GtkWindowExt, WidgetExt},
 };
 use std::rc::Rc;
 
@@ -21,11 +21,24 @@ pub struct MainWindow {
     window: ApplicationWindow,
     drawing: Rc<DrawingArea>,
     program: Rc<Program>,
+    label_zoom: Rc<Label>,
 }
 
 impl MainWindow {
     pub fn new(gtk_app: &Application, program: Rc<Program>) -> Self {
-        let drawing = Rc::new(DrawingArea::new());
+        let vbox = gtk::Box::builder()
+            .orientation(Orientation::Vertical)
+            .hexpand(true)
+            .vexpand(true)
+            .build();
+        let label_zoom = Rc::new(Label::new(Some(&program.zoom_view().as_str())));
+        let header_bar = Self::make_header_bar(label_zoom.clone());
+
+        let drawing = DrawingArea::builder().hexpand(true).vexpand(true).build();
+        let drawing = Rc::new(drawing);
+
+        vbox.append(&header_bar);
+        vbox.append(drawing.as_ref());
 
         let window = ApplicationWindow::builder()
             .application(gtk_app)
@@ -33,7 +46,7 @@ impl MainWindow {
             .default_height(500)
             .title("MutPaint")
             .show_menubar(true)
-            .child(drawing.as_ref())
+            .child(&vbox)
             .build();
 
         MainWindow {
@@ -41,7 +54,37 @@ impl MainWindow {
             window,
             drawing: Rc::clone(&drawing),
             program: Rc::clone(&program),
+            label_zoom: label_zoom,
         }
+    }
+
+    fn make_header_bar(label: Rc<Label>) -> CenterBox {
+        let btn_open_image = Button::builder()
+            .icon_name("insert-image")
+            .action_name(actions::app::OPEN_IMAGE)
+            .build();
+
+        let center_widget = gtk::Box::builder()
+            .orientation(Orientation::Horizontal)
+            .build();
+        let btn_zoom_in = Button::builder()
+            .icon_name("zoom-in")
+            .action_name(actions::app::ZOOM_IN)
+            .build();
+        let btn_zoom_out = Button::builder()
+            .icon_name("zoom-out")
+            .action_name(actions::app::ZOOM_OUT)
+            .build();
+        center_widget.append(&btn_zoom_in);
+        center_widget.append(label.as_ref());
+        center_widget.append(&btn_zoom_out);
+
+        CenterBox::builder()
+            .css_classes(["tool-bar"])
+            .start_widget(&btn_open_image)
+            .center_widget(&center_widget)
+            .height_request(40)
+            .build()
     }
 
     pub fn open_image(&self) {
@@ -112,6 +155,7 @@ impl MainWindow {
 
     pub fn connect_events(&self) {
         self.open_image();
+        self.register_zoom_action();
         self.exit();
     }
 
@@ -189,5 +233,59 @@ impl MainWindow {
                 program.draw(ctx);
             }
         ));
+    }
+
+    pub fn register_zoom_action(&self) {
+        self.on_register_action(
+            actions::ZOOM_IN,
+            &["<Ctrl>plus"],
+            clone!(
+                #[strong(rename_to = label_zoom)]
+                self.label_zoom,
+                move |program, drawing| {
+                    program.zoom_in();
+                    drawing.queue_draw();
+                    label_zoom.set_label(program.zoom_view().as_str());
+                }
+            ),
+        );
+        self.on_register_action(
+            actions::ZOOM_OUT,
+            &["<Ctrl>minus"],
+            clone!(
+                #[strong(rename_to = label_zoom)]
+                self.label_zoom,
+                move |program, drawing| {
+                    program.zoom_out();
+                    drawing.queue_draw();
+                    label_zoom.set_label(program.zoom_view().as_str());
+                }
+            ),
+        );
+    }
+
+    pub fn on_register_action<F: Fn(Rc<Program>, Rc<DrawingArea>) + 'static>(
+        &self,
+        name: &str,
+        accels: &[&str],
+        f: F,
+    ) {
+        let action = SimpleAction::new(name, None);
+        action.connect_activate(clone!(
+            #[strong(rename_to = program)]
+            self.program,
+            #[strong(rename_to = drawing)]
+            self.drawing,
+            move |_, _| {
+                f(program.clone(), drawing.clone());
+            }
+        ));
+
+        self.gtk_app.add_action(&action);
+
+        if !accels.is_empty() {
+            self.gtk_app
+                .set_accels_for_action(format!("app.{}", name).as_str(), accels);
+        }
     }
 }
