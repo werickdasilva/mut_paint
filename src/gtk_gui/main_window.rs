@@ -22,6 +22,7 @@ pub struct MainWindow {
     drawing: Rc<DrawingArea>,
     program: Rc<Program>,
     label_zoom: Rc<Label>,
+    label_rotate: Rc<Label>,
 }
 
 impl MainWindow {
@@ -32,7 +33,8 @@ impl MainWindow {
             .vexpand(true)
             .build();
         let label_zoom = Rc::new(Label::new(Some(&program.zoom_view().as_str())));
-        let header_bar = Self::make_header_bar(label_zoom.clone());
+        let label_rotate = Rc::new(Label::new(Some(&program.rotate_view().as_str())));
+        let header_bar = Self::make_header_bar(label_zoom.clone(), label_rotate.clone());
 
         let drawing = DrawingArea::builder().hexpand(true).vexpand(true).build();
         let drawing = Rc::new(drawing);
@@ -55,10 +57,11 @@ impl MainWindow {
             drawing: Rc::clone(&drawing),
             program: Rc::clone(&program),
             label_zoom: label_zoom,
+            label_rotate,
         }
     }
 
-    fn make_header_bar(label: Rc<Label>) -> CenterBox {
+    fn make_header_bar(label: Rc<Label>, rotate: Rc<Label>) -> CenterBox {
         let btn_open_image = Button::builder()
             .icon_name("insert-image")
             .action_name(actions::app::OPEN_IMAGE)
@@ -89,6 +92,7 @@ impl MainWindow {
         center_widget.append(label.as_ref());
         center_widget.append(&btn_zoom_out);
         center_widget.append(&btn_rotate_left);
+        center_widget.append(rotate.as_ref());
         center_widget.append(&btn_rotete_right);
 
         CenterBox::builder()
@@ -278,14 +282,32 @@ impl MainWindow {
     }
 
     fn register_rotate_action(&self) {
-        self.on_register_action(actions::ROTATE_LEFT, &[], |program, drawing| {
-            program.rotate_left();
-            drawing.queue_draw();
-        });
-        self.on_register_action(actions::ROTATE_RIGHT, &[], |program, drawing| {
-            program.rotate_right();
-            drawing.queue_draw();
-        });
+        self.on_register_action(
+            actions::ROTATE_LEFT,
+            &[],
+            clone!(
+                #[strong(rename_to = label_rotate)]
+                self.label_rotate,
+                move |program, drawing| {
+                    program.rotate_left();
+                    drawing.queue_draw();
+                    label_rotate.set_label(program.rotate_view().as_str());
+                }
+            ),
+        );
+        self.on_register_action(
+            actions::ROTATE_RIGHT,
+            &[],
+            clone!(
+                #[strong(rename_to = label_rotate)]
+                self.label_rotate,
+                move |program, drawing| {
+                    program.rotate_right();
+                    drawing.queue_draw();
+                    label_rotate.set_label(program.rotate_view().as_str());
+                }
+            ),
+        );
     }
 
     pub fn on_register_action<F: Fn(Rc<Program>, Rc<DrawingArea>) + 'static>(

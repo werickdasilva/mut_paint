@@ -35,6 +35,9 @@ impl App {
     pub fn get_zoom(&self) -> f64 {
         self.canvas.zoom * 100.
     }
+    pub fn get_rotate(&self) -> f64 {
+        self.canvas.rotation.to_degrees()
+    }
 
     pub fn rotate_left(&mut self) {
         self.rotate.rotate_left(&mut self.canvas);
