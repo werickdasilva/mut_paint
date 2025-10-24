@@ -1,7 +1,7 @@
 use crate::{
     core::{canvas::Canvas, event::AppEvents},
     program::ProgramState,
-    tools::{PanTool, ZoomTool},
+    tools::{PanTool, RotateTool, ZoomTool},
 };
 use gtk::{
     cairo::{Context, Format, ImageSurface},
@@ -12,6 +12,7 @@ pub struct App {
     canvas: Canvas,
     pan: PanTool,
     zoom: ZoomTool,
+    rotate: RotateTool,
 }
 
 impl App {
@@ -20,8 +21,10 @@ impl App {
             canvas: Canvas::new(),
             pan: PanTool::new(),
             zoom: ZoomTool::new(),
+            rotate: RotateTool::new(),
         }
     }
+
     pub fn zoom_in(&mut self) {
         self.zoom.zoom_in(&mut self.canvas);
     }
@@ -31,6 +34,17 @@ impl App {
 
     pub fn get_zoom(&self) -> f64 {
         self.canvas.zoom * 100.
+    }
+    pub fn get_rotate(&self) -> f64 {
+        self.canvas.rotation.to_degrees()
+    }
+
+    pub fn rotate_left(&mut self) {
+        self.rotate.rotate_left(&mut self.canvas);
+    }
+
+    pub fn rotate_right(&mut self) {
+        self.rotate.rotate_right(&mut self.canvas);
     }
 
     pub fn open(&mut self, pixbuf: Pixbuf) {

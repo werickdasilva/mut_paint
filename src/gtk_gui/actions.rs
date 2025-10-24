@@ -1,8 +1,9 @@
-
 pub const OPEN_IMAGE: &str = "open-image";
 pub const ZOOM_IN: &str = "zoom-in";
 pub const ZOOM_OUT: &str = "zoom-out";
 pub const EXIT: &str = "exit";
+pub const ROTATE_LEFT: &str = "rotate-left";
+pub const ROTATE_RIGHT: &str = "rotate-right";
 
 pub mod app {
     use const_format::concatcp;
@@ -12,4 +13,6 @@ pub mod app {
     pub const OPEN_IMAGE: &str = concatcp!(APP_PREFIX, super::OPEN_IMAGE);
     pub const ZOOM_IN: &str = concatcp!(APP_PREFIX, super::ZOOM_IN);
     pub const ZOOM_OUT: &str = concatcp!(APP_PREFIX, super::ZOOM_OUT);
+    pub const ROTATE_LEFT: &str = concatcp!(APP_PREFIX, super::ROTATE_LEFT);
+    pub const ROTATE_RIGHT: &str = concatcp!(APP_PREFIX, super::ROTATE_RIGHT);
 }

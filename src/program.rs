@@ -37,8 +37,17 @@ impl Program {
     pub fn zoom_in(&self) {
         self.app.borrow_mut().zoom_in();
     }
+    
     pub fn zoom_out(&self) {
         self.app.borrow_mut().zoom_out();
+    }
+
+    pub fn rotate_left(&self) {
+        self.app.borrow_mut().rotate_left();
+    }
+    
+    pub fn rotate_right(&self) {
+        self.app.borrow_mut().rotate_right();
     }
 
     pub fn zoom_view(&self) -> String {
@@ -46,6 +55,10 @@ impl Program {
         format!("{:.1}%", zoom)
     }
 
+    pub fn rotate_view(&self) -> String {
+        let rotate = self.app.borrow().get_rotate();
+        format!("{:.1}%", rotate)
+    }
     pub fn open_image(&self, path: impl Into<String>) {
         let pixbuf = Pixbuf::from_file(path.into());
         if let Ok(image) = pixbuf {
