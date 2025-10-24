@@ -1,7 +1,7 @@
 use crate::{
     core::{canvas::Canvas, event::AppEvents},
     program::ProgramState,
-    tools::{PanTool, RotateTool, ZoomTool},
+    tools::{BrushTool, PanTool, RotateTool, ZoomTool},
 };
 use gtk::{
     cairo::{Context, Format, ImageSurface},
@@ -13,6 +13,7 @@ pub struct App {
     pan: PanTool,
     zoom: ZoomTool,
     rotate: RotateTool,
+    brush: BrushTool,
 }
 
 impl App {
@@ -22,6 +23,7 @@ impl App {
             pan: PanTool::new(),
             zoom: ZoomTool::new(),
             rotate: RotateTool::new(),
+            brush: BrushTool::new(),
         }
     }
 
@@ -57,11 +59,13 @@ impl App {
     }
 
     pub fn on_event(&mut self, events: AppEvents, state: &mut ProgramState) {
-        self.pan.on_event(events, &mut self.canvas, state);
+        // TODO: create a tool change system
+        // self.pan.on_event(events, &mut self.canvas, state);
         self.zoom.on_event(events, &mut self.canvas, state);
+        self.brush.on_event(events, &mut self.canvas, state);
     }
 
-    pub fn draw(&self, ctx: &Context) {
+    pub fn draw(&mut self, ctx: &Context) {
         self.canvas.draw(ctx);
     }
 }
