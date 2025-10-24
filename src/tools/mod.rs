@@ -7,4 +7,6 @@ pub use zoom::ZoomTool;
 mod rotate;
 pub use rotate::RotateTool;
 
+mod brush;
+pub use brush::BrushTool;
 

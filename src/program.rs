@@ -73,6 +73,6 @@ impl Program {
     }
 
     pub fn draw(&self, ctx: &Context) {
-        self.app.borrow().draw(ctx);
+        self.app.borrow_mut().draw(ctx);
     }
 }
