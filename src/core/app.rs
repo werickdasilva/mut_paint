@@ -8,12 +8,19 @@ use gtk::{
     gdk::prelude::GdkCairoContextExt,
     gdk_pixbuf::Pixbuf,
 };
+
+pub enum Tools {
+    Pan,
+    Brush,
+}
+
 pub struct App {
     canvas: Canvas,
     pan: PanTool,
     zoom: ZoomTool,
     rotate: RotateTool,
     brush: BrushTool,
+    active_tool: Tools
 }
 
 impl App {
@@ -24,7 +31,12 @@ impl App {
             zoom: ZoomTool::new(),
             rotate: RotateTool::new(),
             brush: BrushTool::new(),
+            active_tool: Tools::Pan,
         }
+    }
+
+    pub fn set_tool(&mut self, tool: Tools) {
+        self.active_tool = tool;
     }
 
     pub fn zoom_in(&mut self) {
@@ -59,10 +71,11 @@ impl App {
     }
 
     pub fn on_event(&mut self, events: AppEvents, state: &mut ProgramState) {
-        // TODO: create a tool change system
-        // self.pan.on_event(events, &mut self.canvas, state);
+        match self.active_tool {
+            Tools::Pan => self.pan.on_event(events, &mut self.canvas, state),
+            Tools::Brush => self.brush.on_event(events, &mut self.canvas, state),
+        }
         self.zoom.on_event(events, &mut self.canvas, state);
-        self.brush.on_event(events, &mut self.canvas, state);
     }
 
     pub fn draw(&mut self, ctx: &Context) {
