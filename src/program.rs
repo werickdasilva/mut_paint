@@ -1,4 +1,4 @@
-use crate::core::{app::App, event::AppEvents};
+use crate::core::{app::{App, Tools}, event::AppEvents};
 use gtk::{cairo::Context, gdk_pixbuf::Pixbuf};
 use std::cell::RefCell;
 
@@ -34,6 +34,10 @@ impl Program {
         }
     }
 
+    pub fn set_tool(&self, tool: Tools) {
+        self.app.borrow_mut().set_tool(tool);
+    }
+    
     pub fn zoom_in(&self) {
         self.app.borrow_mut().zoom_in();
     }
@@ -73,6 +77,6 @@ impl Program {
     }
 
     pub fn draw(&self, ctx: &Context) {
-        self.app.borrow().draw(ctx);
+        self.app.borrow_mut().draw(ctx);
     }
 }

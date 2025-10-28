@@ -5,16 +5,11 @@ use crate::{
     program::Program,
 };
 use gtk::{
-    Application, ApplicationWindow, Button, CenterBox, DrawingArea, EventControllerMotion,
-    EventControllerScroll, EventControllerScrollFlags, GestureClick, Label, Orientation,
     gio::{
-        SimpleAction,
-        prelude::{ActionMapExt, ApplicationExt},
-    },
-    glib::{self, clone},
-    prelude::{BoxExt, DrawingAreaExtManual, GtkApplicationExt, GtkWindowExt, WidgetExt},
+        prelude::{ActionMapExt, ApplicationExt}, SimpleAction
+    }, glib::{self, clone}, prelude::{BoxExt, DrawingAreaExtManual, GtkApplicationExt, GtkWindowExt, WidgetExt}, Application, ApplicationWindow, Button, CenterBox, DrawingArea, EventControllerMotion, EventControllerScroll, EventControllerScrollFlags, GestureClick, Image, Label, Orientation
 };
-use std::rc::Rc;
+use std::{path::PathBuf, rc::Rc};
 
 pub struct MainWindow {
     gtk_app: Application,
@@ -66,6 +61,17 @@ impl MainWindow {
             .icon_name("insert-image")
             .action_name(actions::app::OPEN_IMAGE)
             .build();
+         let path = PathBuf::from("res/icons/brush_24d_material-icon.png");
+        let btn_brush = Button::builder()
+            .label("B")
+            .child(&Image::from_file(path))
+            .action_name(actions::app::TOOL_BRUSH)
+            .build();
+        let start_widget = gtk::Box::builder()
+            .orientation(Orientation::Horizontal)
+            .build();
+        start_widget.append(&btn_open_image);
+        start_widget.append(&btn_brush);
 
         let center_widget = gtk::Box::builder()
             .orientation(Orientation::Horizontal)
@@ -97,7 +103,7 @@ impl MainWindow {
 
         CenterBox::builder()
             .css_classes(["tool-bar"])
-            .start_widget(&btn_open_image)
+            .start_widget(&start_widget)
             .center_widget(&center_widget)
             .height_request(40)
             .build()
@@ -173,6 +179,7 @@ impl MainWindow {
         self.open_image();
         self.register_zoom_action();
         self.register_rotate_action();
+        self.register_tools_action();
         self.exit();
     }
 
@@ -308,6 +315,15 @@ impl MainWindow {
                 }
             ),
         );
+    }
+
+    pub fn register_tools_action(&self) {
+        self.on_register_action(actions::TOOL_PAN, &["space"], |program, _| {
+            program.set_tool(crate::core::app::Tools::Pan)
+        });
+        self.on_register_action(actions::TOOL_BRUSH, &["<Ctrl>B"], |program, _| {
+            program.set_tool(crate::core::app::Tools::Brush)
+        });
     }
 
     pub fn on_register_action<F: Fn(Rc<Program>, Rc<DrawingArea>) + 'static>(

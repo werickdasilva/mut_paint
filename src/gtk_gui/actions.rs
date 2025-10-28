@@ -4,6 +4,8 @@ pub const ZOOM_OUT: &str = "zoom-out";
 pub const EXIT: &str = "exit";
 pub const ROTATE_LEFT: &str = "rotate-left";
 pub const ROTATE_RIGHT: &str = "rotate-right";
+pub const TOOL_PAN: &str = "tool-pan";
+pub const TOOL_BRUSH: &str = "tool-brush";
 
 pub mod app {
     use const_format::concatcp;
@@ -15,4 +17,6 @@ pub mod app {
     pub const ZOOM_OUT: &str = concatcp!(APP_PREFIX, super::ZOOM_OUT);
     pub const ROTATE_LEFT: &str = concatcp!(APP_PREFIX, super::ROTATE_LEFT);
     pub const ROTATE_RIGHT: &str = concatcp!(APP_PREFIX, super::ROTATE_RIGHT);
+    pub const TOOL_PAN: &str = concatcp!(APP_PREFIX, super::TOOL_PAN);
+    pub const TOOL_BRUSH: &str = concatcp!(APP_PREFIX, super::TOOL_BRUSH);
 }
