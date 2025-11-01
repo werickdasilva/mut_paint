@@ -1,3 +1,5 @@
+use std::{fmt, str::FromStr};
+
 use crate::{
     core::{canvas::Canvas, event::AppEvents},
     program::ProgramState,
@@ -6,13 +8,41 @@ use crate::{
 use gtk::{
     cairo::{Context, Format, ImageSurface},
     gdk::prelude::GdkCairoContextExt,
-    gdk_pixbuf::Pixbuf,
+    gdk_pixbuf::Pixbuf, glib::variant::ToVariant,
 };
 
 pub enum Tools {
     Pan,
     Brush,
 }
+
+impl Tools {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Tools::Pan => "pan",
+            Tools::Brush => "brush"
+        }
+    }
+}
+
+impl fmt::Display for Tools {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
+
+impl FromStr for Tools {
+    type Err  = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "pan" => Ok(Tools::Pan),
+            "brush" => Ok(Tools::Brush),
+            _ => Err("Tool Invalid")
+        }
+    }
+}
+
 
 pub struct App {
     canvas: Canvas,

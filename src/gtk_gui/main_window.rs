@@ -1,15 +1,21 @@
 use crate::{
-    core::event::AppEvents,
+    core::{app::Tools, event::AppEvents},
     geometry::Point,
     gtk_gui::{actions, open_image::OpenImage},
     program::Program,
 };
 use gtk::{
+    Application, ApplicationWindow, Button, CenterBox, DrawingArea, EventControllerMotion,
+    EventControllerScroll, EventControllerScrollFlags, GestureClick, Image, Label, Orientation,
+    ToggleButton,
     gio::{
-        prelude::{ActionMapExt, ApplicationExt}, SimpleAction
-    }, glib::{self, clone}, prelude::{BoxExt, DrawingAreaExtManual, GtkApplicationExt, GtkWindowExt, WidgetExt}, Application, ApplicationWindow, Button, CenterBox, DrawingArea, EventControllerMotion, EventControllerScroll, EventControllerScrollFlags, GestureClick, Image, Label, Orientation
+        SimpleAction,
+        prelude::{ActionExt, ActionMapExt, ApplicationExt},
+    },
+    glib::{self, VariantType, clone, variant::ToVariant},
+    prelude::{BoxExt, DrawingAreaExtManual, GtkApplicationExt, GtkWindowExt, WidgetExt},
 };
-use std::{path::PathBuf, rc::Rc};
+use std::{path::PathBuf, rc::Rc, str::FromStr};
 
 pub struct MainWindow {
     gtk_app: Application,
@@ -33,9 +39,12 @@ impl MainWindow {
 
         let drawing = DrawingArea::builder().hexpand(true).vexpand(true).build();
         let drawing = Rc::new(drawing);
+        let area_drawing = gtk::Box::new(Orientation::Horizontal, 0);
+        area_drawing.append(&Self::make_tool_bar());
+        area_drawing.append(drawing.as_ref());
 
         vbox.append(&header_bar);
-        vbox.append(drawing.as_ref());
+        vbox.append(&area_drawing);
 
         let window = ApplicationWindow::builder()
             .application(gtk_app)
@@ -61,17 +70,11 @@ impl MainWindow {
             .icon_name("insert-image")
             .action_name(actions::app::OPEN_IMAGE)
             .build();
-         let path = PathBuf::from("res/icons/brush_24d_material-icon.png");
-        let btn_brush = Button::builder()
-            .label("B")
-            .child(&Image::from_file(path))
-            .action_name(actions::app::TOOL_BRUSH)
-            .build();
+      
         let start_widget = gtk::Box::builder()
             .orientation(Orientation::Horizontal)
             .build();
         start_widget.append(&btn_open_image);
-        start_widget.append(&btn_brush);
 
         let center_widget = gtk::Box::builder()
             .orientation(Orientation::Horizontal)
@@ -107,6 +110,26 @@ impl MainWindow {
             .center_widget(&center_widget)
             .height_request(40)
             .build()
+    }
+
+    fn make_tool_bar() -> gtk::Box {
+        let column = gtk::Box::new(Orientation::Vertical, 0);
+
+        let pan = ToggleButton::builder()
+            .icon_name("tool-pan")
+            .action_name(actions::app::TOGGLE_ACTION)
+            .action_target(&Tools::Pan.to_string().to_variant())
+            .build();
+        let brush = ToggleButton::builder()
+            .icon_name("tool-brush")
+            .action_name(actions::app::TOGGLE_ACTION)
+            .action_target(&Tools::Brush.to_string().to_variant())
+            .build();
+
+        column.append(&pan);
+        column.append(&brush);
+
+        column
     }
 
     pub fn open_image(&self) {
@@ -318,12 +341,41 @@ impl MainWindow {
     }
 
     pub fn register_tools_action(&self) {
-        self.on_register_action(actions::TOOL_PAN, &["space"], |program, _| {
-            program.set_tool(crate::core::app::Tools::Pan)
-        });
-        self.on_register_action(actions::TOOL_BRUSH, &["<Ctrl>B"], |program, _| {
-            program.set_tool(crate::core::app::Tools::Brush)
-        });
+        let tool_action = self.on_register_statefull_action(
+            actions::TOGGLE_ACTION,
+            Tools::Pan.as_str(),
+            |_, new_tool_name, program, _| {
+                println!("{}", new_tool_name);
+                match Tools::from_str(new_tool_name) {
+                    Ok(new_tool) => program.set_tool(new_tool),
+                    Err(e) => eprintln!("Erro ao converter ferramenta: {}", e),
+                }
+
+
+            },
+        );
+        self.on_register_action(
+            actions::TOOL_PAN,
+            &["space"],
+            clone!(
+                #[strong]
+                tool_action,
+                move |_, _| {
+                    tool_action.change_state(&actions::TOOL_PAN.to_variant());
+                }
+            ),
+        );
+        self.on_register_action(
+            actions::TOOL_BRUSH,
+            &["<Ctrl>B"],
+            clone!(
+                #[strong]
+                tool_action,
+                move |_, _| {
+                    tool_action.change_state(&actions::TOOL_BRUSH.to_variant());
+                }
+            ),
+        );
     }
 
     pub fn on_register_action<F: Fn(Rc<Program>, Rc<DrawingArea>) + 'static>(
@@ -349,5 +401,37 @@ impl MainWindow {
             self.gtk_app
                 .set_accels_for_action(format!("app.{}", name).as_str(), accels);
         }
+    }
+
+    pub fn on_register_statefull_action<F>(
+        &self,
+        name: &str,
+        initial_state: &str,
+        f: F,
+    ) -> Rc<SimpleAction>
+    where
+        F: Fn(&SimpleAction, &str, Rc<Program>, Rc<DrawingArea>) + 'static,
+    {
+        let state_type = VariantType::new("s").unwrap();
+        let initial_variant = initial_state.to_variant();
+        let action = SimpleAction::new_stateful(name, Some(&state_type), &initial_variant);
+        action.set_state(&initial_variant);
+
+        action.connect_change_state(clone!(
+            #[strong(rename_to = program)]
+            self.program,
+            #[strong(rename_to = drawing)]
+            self.drawing,
+            move |action, value| {
+                let value = value.expect("É obrigatorio ter um valor");
+                let new_tool  = value.to_string();
+                f(action, &new_tool.trim_matches('\''), program.clone(), drawing.clone());
+                action.set_state(value);
+            }
+        ));
+
+        let rc_action = Rc::new(action);
+        self.gtk_app.add_action(rc_action.as_ref());
+        rc_action
     }
 }
