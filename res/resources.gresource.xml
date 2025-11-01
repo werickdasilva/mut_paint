@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="mut_paint/MutPaint">
+    <file>icons/tool-pan.svg</file>
+    <file>icons/tool-brush.svg</file>
+  </gresource>
+</gresources>
